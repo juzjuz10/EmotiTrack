@@ -10,14 +10,13 @@ const Tab = createBottomTabNavigator();
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
+ 
       <Tab.Navigator>
         <Tab.Screen name="Inicio" component={HomeScreen} />
         <Tab.Screen name="Registrar" component={RegisterEmotionScreen} />
         <Tab.Screen name="Historial" component={WeeklyReportScreen} />
         <Tab.Screen name="Recomendación" component={RecommendationScreen} />
       </Tab.Navigator>
-    </NavigationContainer>
+
   );
 }
-
