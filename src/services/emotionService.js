@@ -1,15 +1,19 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../config/superbase';
 
-const KEY = 'EMOTITRACK_DATA';
+export const saveEmotion = async ({ emotion, intensity }) => {
+  const { error } = await supabase
+    .from('emotions')
+    .insert([{ emotion, intensity }]);
 
-export const saveEmotion = async (emotion) => {
-  const existing = await AsyncStorage.getItem(KEY);
-  const emotions = existing ? JSON.parse(existing) : [];
-  emotions.push(emotion);
-  await AsyncStorage.setItem(KEY, JSON.stringify(emotions));
+  if (error) throw error;
 };
 
 export const getEmotions = async () => {
-  const data = await AsyncStorage.getItem(KEY);
-  return data ? JSON.parse(data) : [];
+  const { data, error } = await supabase
+    .from('emotions')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
 };

@@ -20,7 +20,7 @@ const handleSave = async () => {
   await saveEmotion({
     emotion,
     intensity,
-    date: new Date().toISOString()
+   
   });
 
   Alert.alert('¡Listo!', 'Tu emoción ha sido registrada.');

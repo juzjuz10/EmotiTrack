@@ -1,6 +1,8 @@
 import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Image } from 'react-native';
 import { useState } from 'react';
+import { getEmotions } from '../services/emotionService';
 
+import { globalStyles } from '../utils/styles'
 // Aquí defines qué ejercicio corresponde a cada emoción.
 const recommendationsData = [
   {
