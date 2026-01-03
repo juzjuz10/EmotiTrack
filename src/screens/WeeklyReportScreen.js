@@ -106,7 +106,7 @@ export default function HistoryScreen() {
     switch (emotion) {
       case 'Feliz': return '#cbffc4ff'; 
       case 'Triste': return '#fae7d7ff'; 
-      case 'Estresado': return '#FFEBEE';
+      case 'Calmado': return '#FFEBEE';
       case 'Ansioso': return '#F3E5F5';
       default: return '#faefaeff';
     }

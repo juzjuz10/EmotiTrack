@@ -1,135 +1,111 @@
-import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Image } from 'react-native';
-import { useState } from 'react';
-import { getEmotions } from '../services/emotionService';
-
-import { globalStyles } from '../utils/styles'
-// Aquí defines qué ejercicio corresponde a cada emoción.
-const recommendationsData = [
-  {
-    id: '1',
-    emotion: 'Ansioso',
-    title: '¿Sientes Ansiedad?',
-    subtitle: 'Prueba la respiración 4-7-8',
-    color: '#E3F2FD', // Azul suave
-    borderColor: '#2196F3',
-    icon: '🌬️',
-    steps: [
-      'Siéntate con la espalda recta.',
-      'Inhala por la nariz contando hasta 4.',
-      'Aguanta la respiración contando hasta 7.',
-      'Exhala por la boca contando hasta 8.',
-      'Repite el ciclo 4 veces.'
-    ]
-  },
-  {
-    id: '2',
-    emotion: 'Estresado',
-    title: '¿Mucho Estrés?',
-    subtitle: 'Relajación muscular progresiva',
-    color: '#FFEBEE', // Rojo suave
-    borderColor: '#EF5350',
-    icon: '💪',
-    steps: [
-      'Cierra los ojos y respira profundo.',
-      'Tensa fuerte los hombros por 5 segundos.',
-      'Suelta de golpe y siente la relajación.',
-      'Repite con los puños, luego las piernas.',
-      'Siente cómo la tensión abandona tu cuerpo.'
-    ]
-  },
-  {
-    id: '3',
-    emotion: 'Triste',
-    title: '¿Te sientes triste?',
-    subtitle: 'Diario de gratitud express',
-    color: '#FFF3E0', // Naranja suave
-    borderColor: '#FF9800',
-    icon: '✍️',
-    steps: [
-      'Toma un papel o tu celular.',
-      'Escribe 3 cosas pequeñas por las que estás agradecido hoy (un café, el sol, una canción).',
-      'Lee la lista en voz alta.',
-      'Permítete sonreír un poco.'
-    ]
-  },
-];
+import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from 'react';
+import { getAllRecommendations } from '../services/recommendationService'; 
 
 export default function RecommendationScreen() {
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Estados para el Modal
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  // Función para abrir el ejercicio
-  const handleOpenExercise = (item) => {
-    setSelectedExercise(item);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const data = await getAllRecommendations();
+    setRecommendations(data || []);
+    setLoading(false);
+  };
+
+  const handleOpen = (item) => {
+    setSelectedItem(item);
     setModalVisible(true);
   };
 
-  // Función para cerrar
   const handleClose = () => {
     setModalVisible(false);
-    setSelectedExercise(null);
+    setSelectedItem(null);
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.mainTitle}>Recomendaciones para ti</Text>
-      
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {recommendationsData.map((item) => (
-          <TouchableOpacity 
-            key={item.id} 
-            style={[styles.card, { backgroundColor: item.color, borderColor: item.borderColor }]}
-            onPress={() => handleOpenExercise(item)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>{item.icon}</Text>
-              <View style={styles.cardTextContainer}>
-                <Text style={[styles.cardTitle, { color: item.borderColor }]}>{item.title}</Text>
-                <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+      <Text style={styles.mainTitle}>Biblioteca de Bienestar</Text>
+      <Text style={styles.subtitle}>Recursos disponibles para ti</Text>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {recommendations.length === 0 ? (
+          <Text style={styles.emptyText}>No hay recomendaciones disponibles en la base de datos.</Text>
+        ) : (
+          recommendations.map((item) => (
+            <TouchableOpacity 
+              key={item.id} 
+              style={[styles.card, { backgroundColor: item.color || '#E3F2FD' }]} 
+              onPress={() => handleOpen(item)}
+              activeOpacity={0.9}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardIcon}>{item.icon }</Text>
+                <View style={styles.cardTextContainer}>
+                  <Text style={[styles.cardTitle, { color: item.borderColor || '#333' }]}>
+                    {item.emotion}
+                  </Text>
+                  <Text style={styles.cardSubtitle}>{item.title}</Text>
+                </View>
+                <Text style={[styles.arrow, { color: item.borderColor || '#272727ff' }]}>→</Text>
               </View>
-              {/* Flechita indicando que se puede abrir */}
-              <Text style={{ fontSize: 20, color: item.borderColor }}>→</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
-      {/* --- MODAL DEL EJERCICIO --- */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={handleClose}
-      >
+      {/* --- MODAL DE DETALLES --- */}
+      <Modal transparent visible={modalVisible} animationType="slide" onRequestClose={handleClose}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            
-            {selectedExercise && (
+            {selectedItem && (
               <>
-                <View style={[styles.modalHeader, { backgroundColor: selectedExercise.color }]}>
-                  <Text style={styles.modalIcon}>{selectedExercise.icon}</Text>
-                  <Text style={styles.modalTitle}>{selectedExercise.subtitle}</Text>
+                {/* Cabecera del Modal con el color del ítem */}
+                <View style={[styles.modalHeader, { backgroundColor: selectedItem.color || '#E3F2FD' }]}>
+                  <Text style={styles.modalIconGrande}>{selectedItem.icon }</Text>
+                  <Text style={styles.modalTitle}>{selectedItem.title}</Text>
+                  <Text style={styles.modalSubtitle}>{selectedItem.subtitle}</Text>
                 </View>
 
                 <ScrollView style={styles.modalBody}>
-                  <Text style={styles.instructionsTitle}>Sigue estos pasos:</Text>
+                  <Text style={styles.stepsTitle}>Pasos a seguir:</Text>
                   
-                  {selectedExercise.steps.map((step, index) => (
-                    <View key={index} style={styles.stepContainer}>
-                      <View style={[styles.stepNumber, { backgroundColor: selectedExercise.borderColor }]}>
-                        <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  {/* Verificamos que 'steps' sea un array antes de mapear */}
+                  {Array.isArray(selectedItem.steps) ? (
+                    selectedItem.steps.map((step, index) => (
+                      <View key={index} style={styles.stepRow}>
+                        <View style={[styles.stepBadge, { backgroundColor: selectedItem.borderColor || '#4A90E2' }]}>
+                          <Text style={styles.stepNumber}>{index + 1}</Text>
+                        </View>
+                        <Text style={styles.stepText}>{step}</Text>
                       </View>
-                      <Text style={styles.stepText}>{step}</Text>
-                    </View>
-                  ))}
+                    ))
+                  ) : (
+                    <Text style={styles.stepText}>No hay pasos detallados para este ejercicio.</Text>
+                  )}
                 </ScrollView>
 
                 <TouchableOpacity 
-                  style={[styles.closeButton, { backgroundColor: selectedExercise.borderColor }]} 
+                  style={[styles.closeButton, { backgroundColor: selectedItem.borderColor || '#4A90E2' }]} 
                   onPress={handleClose}
                 >
-                  <Text style={styles.closeButtonText}>¡Me siento mejor!</Text>
+                  <Text style={styles.closeButtonText}>Listo</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -144,27 +120,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 50, // Ajusta según tu header
+    paddingTop: 60,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   mainTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    paddingHorizontal: 20,
-    marginBottom: 20,
     color: '#333',
+    paddingHorizontal: 24,
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+    color: '#999',
+    fontSize: 16,
+  },
+
   // ESTILOS DE LA CARD
   card: {
     borderRadius: 16,
     padding: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    
-    // Sombras suaves
+    marginBottom: 16,
+    // Sombras
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -174,10 +165,9 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   cardIcon: {
-    fontSize: 30,
+    fontSize: 32,
     marginRight: 15,
   },
   cardTextContainer: {
@@ -194,34 +184,37 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  
+  arrow: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+
   // ESTILOS DEL MODAL
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)', // Fondo oscuro transparente
-    justifyContent: 'flex-end', // El modal sale desde abajo
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    height: '80%', // Ocupa el 80% de la pantalla
-    paddingBottom: 30,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    height: '85%',
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.2,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 10,
+    overflow: 'hidden',
   },
   modalHeader: {
     padding: 25,
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  modalIcon: {
+  modalIconGrande: {
     fontSize: 50,
     marginBottom: 10,
   },
@@ -230,32 +223,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
+    marginBottom: 5,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
   },
   modalBody: {
     padding: 25,
   },
-  instructionsTitle: {
+  stepsTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 20,
-    color: '#666',
   },
-  stepContainer: {
+  stepRow: {
     flexDirection: 'row',
     marginBottom: 20,
     alignItems: 'flex-start',
   },
-  stepNumber: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  stepBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+    marginTop: 2,
   },
-  stepNumberText: {
+  stepNumber: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 14,
   },
   stepText: {
     fontSize: 16,
@@ -264,15 +265,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   closeButton: {
-    marginHorizontal: 25,
-    padding: 16,
-    borderRadius: 15,
+    margin: 25,
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: 'center',
-    marginBottom: 20, // Espacio seguro inferior
   },
   closeButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
-  }
+  },
 });
