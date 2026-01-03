@@ -1,33 +1,38 @@
-import { View, Text, FlatList } from 'react-native';
+import { View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { getEmotions } from '../services/emotionService';
+import { VictoryBar, VictoryChart, VictoryTheme } from 'victory-native';
 import { globalStyles } from '../utils/styles';
 
 export default function WeeklyReportScreen() {
-  const [emotions, setEmotions] = useState([]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const data = await getEmotions();
-    setEmotions(data);
+    const emotions = await getEmotions();
+
+    const formatted = emotions.map((item, index) => ({
+      x: index + 1,
+      y: item.intensity
+    }));
+
+    setData(formatted);
   };
 
   return (
     <View style={globalStyles.screen}>
-      <Text style={globalStyles.title}>Historial semanal</Text>
+      <Text style={globalStyles.title}>Historial emocional</Text>
 
-      <FlatList
-        data={emotions}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <Text>
-            {new Date(item.date).toLocaleDateString()} - {item.emotion} ({item.intensity})
-          </Text>
-        )}
-      />
+      {data.length === 0 ? (
+        <Text>No hay registros todavía.</Text>
+      ) : (
+        <VictoryChart theme={VictoryTheme.material}>
+          <VictoryBar data={data} />
+        </VictoryChart>
+      )}
     </View>
   );
 }

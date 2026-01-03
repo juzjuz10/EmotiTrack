@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { useState } from 'react';
 import EmotionSelector from '../components/EmotionSelector';
+import { saveEmotion } from '../services/emotionService';
 import IntensitySlider from '../components/IntensitySlider';
 // Asegúrate de que tus estilos globales no entren en conflicto, 
 // o usa estos estilos locales que son más específicos.
@@ -10,16 +11,22 @@ export default function RegisterEmotionScreen() {
   const [emotion, setEmotion] = useState(null);
   const [intensity, setIntensity] = useState(3);
 
-  const handleSave = async () => {
-    if (!emotion) {
-      Alert.alert('Falta información', 'Por favor selecciona una emoción primero.');
-      return;
-    }
+const handleSave = async () => {
+  if (!emotion) {
+    Alert.alert('Falta información', 'Por favor selecciona una emoción primero.');
+    return;
+  }
 
-    console.log("Guardando:", { emotion, intensity });
-    // Aquí iría tu lógica de guardado...
-    Alert.alert('¡Listo!', 'Tu emoción ha sido registrada.');
-  };
+  await saveEmotion({
+    emotion,
+    intensity,
+    date: new Date().toISOString()
+  });
+
+  Alert.alert('¡Listo!', 'Tu emoción ha sido registrada.');
+  setEmotion(null);
+};
+
 
   return (
     // SafeAreaView evita que el contenido toque la barra de estado o el notch del iPhone

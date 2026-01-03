@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = 'EMOTIONS';
+const KEY = 'EMOTITRACK_DATA';
 
 export const saveEmotion = async (emotion) => {
-  const data = await AsyncStorage.getItem(STORAGE_KEY);
-  const emotions = data ? JSON.parse(data) : [];
+  const existing = await AsyncStorage.getItem(KEY);
+  const emotions = existing ? JSON.parse(existing) : [];
   emotions.push(emotion);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(emotions));
+  await AsyncStorage.setItem(KEY, JSON.stringify(emotions));
 };
 
 export const getEmotions = async () => {
-  const data = await AsyncStorage.getItem(STORAGE_KEY);
+  const data = await AsyncStorage.getItem(KEY);
   return data ? JSON.parse(data) : [];
 };
