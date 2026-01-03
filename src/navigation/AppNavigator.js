@@ -5,7 +5,6 @@ import HomeScreen from '../screens/HomeScreen';
 import RegisterEmotionScreen from '../screens/RegisterEmotionScreen';
 import WeeklyReportScreen from '../screens/WeeklyReportScreen';
 import RecommendationScreen from '../screens/RecommendationScreen';
-
 const Tab = createBottomTabNavigator();
 
 export default function AppNavigator() {
