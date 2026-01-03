@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 import { colors } from '../utils/styles';
 
-// 1. Mapeo de emociones a sus imágenes (asegúrate de tener los archivos en tu carpeta assets)
+// 1. Mapeo de emociones a sus imágenes 
 const emotionsData = [
   { label: 'Emocionado', image: require('../../assets/images/emocionado.png') }, 
   { label: ' Feliz ', image: require('../../assets/images/feliz.png') },

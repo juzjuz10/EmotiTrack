@@ -1,81 +1,119 @@
-import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView, SafeAreaView, Modal } from 'react-native';
 import { useState } from 'react';
 import EmotionSelector from '../components/EmotionSelector';
 import { saveEmotion } from '../services/emotionService';
 import IntensitySlider from '../components/IntensitySlider';
-// Asegúrate de que tus estilos globales no entren en conflicto, 
-// o usa estos estilos locales que son más específicos.
 import { colors } from '../utils/styles'; 
+import ActivitySelector from '../components/ActivitySelector';
 
 export default function RegisterEmotionScreen() {
   const [emotion, setEmotion] = useState(null);
   const [intensity, setIntensity] = useState(3);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [activity, setActivity] = useState(null);
 
-const handleSave = async () => {
-  if (!emotion) {
-    Alert.alert('Falta información', 'Por favor selecciona una emoción primero.');
-    return;
-  }
+  // Esta función se ejecuta cuando el usuario toca una emoción en el Selector
+  const handleEmotionSelect = (selectedEmotion) => {
+    setEmotion(selectedEmotion);
+    setIntensity(3); // Reiniciar intensidad a un valor medio por defecto
+    setModalVisible(true); // Abrir el modal inmediatamente
+  };
 
-  await saveEmotion({
-    emotion,
-    intensity,
-   
-  });
+  const handleSave = async () => {
+    if (!emotion) return;
 
-  Alert.alert('¡Listo!', 'Tu emoción ha sido registrada.');
-  setEmotion(null);
-};
+    await saveEmotion({
+      emotion,
+      intensity,
+      activityId: activity
+    });
 
+    setModalVisible(false); // Cerrar modal
+    Alert.alert('¡Listo!', 'Tu emoción ha sido registrada.');
+    setEmotion(null); // Limpiar selección
+  };
 
-  return (
-    // SafeAreaView evita que el contenido toque la barra de estado o el notch del iPhone
+  const handleCancel = () => {
+    setModalVisible(false);
+    setEmotion(null); // Opcional: si quieres que se deseleccione al cancelar
+  };
+
+ return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         
-        {/* Título y Cabecera */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
-          <Text style={styles.subtitle}>Selecciona una emoción y su intensidad</Text>
+          <Text style={styles.subtitle}>Toca una emoción para registrarla</Text>
         </View>
         
-        {/* Sección de Selección de Emoción */}
         <View style={styles.section}>
           <EmotionSelector 
-            onSelect={setEmotion} 
+            onSelect={handleEmotionSelect} 
             selectedEmotion={emotion} 
           />
         </View>
 
-        {/* Sección del Slider (con margen extra arriba) */}
-        <View style={[styles.section, styles.sliderSection]}>
-          <Text style={styles.label}>Nivel de intensidad: {intensity}</Text>
-          <IntensitySlider value={intensity} onChange={setIntensity} />
-        </View>
-        
-        {/* Botón Guardar Personalizado */}
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[
-              styles.saveButton, 
-              !emotion && styles.saveButtonDisabled // Estilo diferente si está deshabilitado
-            ]} 
-            onPress={handleSave}
-            disabled={!emotion} // Deshabilita el click si no hay emoción
-          >
-            <Text style={styles.saveButtonText}>Guardar Registro</Text>
-          </TouchableOpacity>
-        </View>
+        {/* --- MODAL EXTENDIDO --- */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={handleCancel}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              
+              {/* Usamos ScrollView dentro del modal por si la pantalla es pequeña */}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                
+                {/* 1. Encabezado */}
+                <Text style={styles.modalTitle}>
+                  {emotion ? `Te sientes  ${emotion}` : 'Intensidad'}
+                </Text>
+              <Text style={styles.modalSubtitle}>¿Qué tan intensa es esta emoción?</Text>
+
+              {/* Slider dentro del Modal */}
+              <View style={styles.modalSliderContainer}>
+                <Text style={styles.label}>Nivel: {intensity}</Text>
+                <IntensitySlider value={intensity} onChange={setIntensity} />
+              </View>
+
+                {/* 3. Sección Actividad (NUEVO) */}
+                <Text style={styles.modalSubtitle}>¿Qué estabas haciendo?</Text>
+                <View style={styles.modalSection}>
+                  <ActivitySelector onSelect={setActivity} selected={activity} />
+                </View>
+
+                {/* 4. Botones de Acción */}
+                <View style={styles.modalButtonsContainer}>
+                  <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    onPress={handleSave} 
+                    style={[styles.saveButton, !activity && styles.saveButtonDisabled]} 
+                      disabled={!activity}
+                      >
+                    <Text style={styles.saveButtonText}>Guardar</Text>
+                  </TouchableOpacity>
+                </View>
+
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
       </ScrollView>
     </SafeAreaView>
-  );
+ );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // Fondo limpio
+    backgroundColor: '#fff',
   },
   scrollContainer: {
     padding: 24,
@@ -83,6 +121,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     marginBottom: 30,
+    marginTop: 20,
     alignItems: 'center',
   },
   title: {
@@ -97,16 +136,48 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-  // Contenedor genérico para separar bloques
   section: {
     marginBottom: 10,
   },
-  // Estilo específico para separar más el slider del selector
-  sliderSection: {
-    marginTop: 30, 
-    backgroundColor: '#f9f9f9', // Opcional: un fondo sutil para resaltar el slider
-    padding: 15,
+  
+  // --- ESTILOS DEL MODAL ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)', // Fondo oscuro semitransparente
+    justifyContent: 'center', // Centrado verticalmente
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+    textTransform: 'capitalize',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+  },
+  modalSliderContainer: {
+    width: '100%',
+    backgroundColor: '#f9f9f9',
     borderRadius: 15,
+    padding: 15,
+    marginBottom: 25,
   },
   label: {
     fontSize: 16,
@@ -115,32 +186,40 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
-  footer: {
-    marginTop: 40,
+  
+  // Botones del Modal
+  modalButtonsContainer: {
+    marginTop: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 15, // Espacio entre botones
   },
-  // ESTILOS DEL BOTÓN PERSONALIZADO
   saveButton: {
-    backgroundColor: '#4A90E2', // Color principal (puedes usar colors.primary)
-    paddingVertical: 16,
-    borderRadius: 25, // Bordes bien redondeados (tipo píldora)
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    width: '60%',        
-    alignSelf: 'center',
-    shadowRadius: 5,
-    elevation: 6, // Sombra para Android
+    flex: 1,
+    backgroundColor: '#4A90E2',
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#ccc', // Gris cuando no se puede hacer click
-    shadowOpacity: 0,
-    elevation: 0,
+    elevation: 2,
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    letterSpacing: 0.5,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  cancelButtonText: {
+    color: '#888',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
