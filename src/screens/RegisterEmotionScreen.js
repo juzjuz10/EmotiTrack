@@ -29,13 +29,13 @@ export default function RegisterEmotionScreen() {
     });
 
     setModalVisible(false); // Cerrar modal
-    Alert.alert('¡Listo!', 'Tu emoción ha sido registrada.');
+    Alert.alert('Tu emoción ha sido registrada.');
     setEmotion(null); // Limpiar selección
   };
 
   const handleCancel = () => {
     setModalVisible(false);
-    setEmotion(null); // Opcional: si quieres que se deseleccione al cancelar
+    setEmotion(null); 
   };
 
  return (

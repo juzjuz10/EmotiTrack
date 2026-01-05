@@ -17,8 +17,8 @@ export default function ActivitySelector({ onSelect, selected }) {
     return;
   }
 
-  console.log('Actividades:', data); // 👀 ver en consola
-  setActivities(data);               // ✅ guardar en el estado
+  console.log('Actividades:', data);
+  setActivities(data);               
 };
 
 

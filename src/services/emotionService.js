@@ -29,13 +29,13 @@ export const getTodayEmotions = async () => {
   const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
   const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
 
-  // 2. Pedimos a Supabase registros creados entre el inicio y fin de hoy
+  
   const { data, error } = await supabase
-    .from('emotions') // Asegúrate que tu tabla se llama así
+    .from('emotions') 
     .select('*')
-    .gte('created_at', startOfDay) // Greater Than or Equal (Mayor o igual)
-    .lte('created_at', endOfDay)   // Less Than or Equal (Menor o igual)
-    .order('created_at', { ascending: false }); // Los más recientes primero
+    .gte('created_at', startOfDay) 
+    .lte('created_at', endOfDay)   
+    .order('created_at', { ascending: false }); 
 
   if (error) {
     console.error('Error fetching today emotions:', error);
